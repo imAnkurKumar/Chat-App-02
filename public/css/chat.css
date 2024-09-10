@@ -1,0 +1,149 @@
+/* General Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #f0f0f0;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 20%;
+  background-color: #3366cc;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header h2 {
+  margin-bottom: 20px;
+}
+
+.group-list {
+  margin-top: 20px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.group-list ul {
+  list-style-type: none;
+}
+
+.group-list ul li {
+  background-color: #4d79ff;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.group-list ul li:hover {
+  background-color: #3b5ccc;
+}
+
+.chat-area {
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+}
+
+.chat-header {
+  background-color: #0099ff;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h3 {
+  margin: 0;
+}
+
+.chat-header-actions {
+  position: relative; /* Added to position the dropdown menu */
+}
+
+.chat-header-actions .header-btn {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 18px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  display: none; /* Hidden by default */
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.dropdown-item {
+  padding: 10px 20px;
+  color: #333;
+  background-color: #fff;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f1f1f1;
+}
+
+.chat-input {
+  display: flex;
+  padding: 15px;
+  background-color: #eee;
+}
+
+.chat-input input {
+  width: 90%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.send-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.send-btn:hover {
+  background-color: #0056b3;
+}

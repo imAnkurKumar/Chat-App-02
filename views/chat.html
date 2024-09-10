@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Group Chat</title>
+    <link rel="stylesheet" href="/css/chat.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Left Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2>Group Chat</h2>
+        </div>
+        <!-- Group list will be dynamically populated here -->
+        <div class="group-list">
+          <ul id="groups">
+            <!-- Groups will be injected here -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Chat Area -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h3 id="group-name">Group Name</h3>
+          <div class="chat-header-actions">
+            <button class="header-btn">📞</button>
+            <button class="header-btn">🎥</button>
+            <button class="header-btn menu-btn">⋮</button>
+            <!-- Dropdown Menu -->
+            <div id="dropdown-menu" class="dropdown-menu">
+              <button class="dropdown-item create-group-btn">
+                Create Group
+              </button>
+              <button class="dropdown-item add-group-btn">Add to Group</button>
+              <button class="dropdown-item logout-btn">Log Out</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <!-- Messages will go here -->
+        </div>
+
+        <div class="chat-input">
+          <input
+            type="text"
+            placeholder="Type your message here..."
+            id="message-input" />
+          <button class="send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js"></script>
+    <script src="js/chat.js"></script>
+  </body>
+</html>
