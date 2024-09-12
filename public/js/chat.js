@@ -8,12 +8,17 @@ document.addEventListener("DOMContentLoaded", () => {
     menuBtn: document.querySelector(".menu-btn"),
     dropdownMenu: document.getElementById("dropdown-menu"),
     addGroupBtn: document.querySelector(".add-group-btn"),
+    removeGroupBtn: document.querySelector(".remove-group-btn"),
     groupNameDisplay: document.getElementById("group-name"),
+    groupMembersModal: document.getElementById("group-members-modal"),
+    groupMembersList: document.getElementById("group-members-list"),
+    closeBtn: document.querySelector(".close-btn"),
   };
 
   const token = localStorage.getItem("token");
   const headers = { Authorization: token };
   let selectedGroupId = null;
+  let messageInterval = null;
 
   // Fetch and display groups when the page loads
   async function loadGroups() {
@@ -50,7 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
     item.classList.add("active");
     selectedGroupId = item.dataset.groupId;
     elements.groupNameDisplay.textContent = item.textContent;
+
+    // Clear the old interval and start a new one for the selected group
+    if (messageInterval) {
+      clearInterval(messageInterval);
+    }
     loadMessages(selectedGroupId);
+    messageInterval = setInterval(() => loadMessages(selectedGroupId), 3000); // Refresh every 3 seconds
   }
 
   async function loadMessages(groupId) {
@@ -78,8 +89,72 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.addGroupBtn.addEventListener("click", addUserToGroup);
   elements.sendBtn.addEventListener("click", sendMessage);
   elements.menuBtn.addEventListener("click", toggleDropdownMenu);
+  elements.groupNameDisplay.addEventListener("click", showGroupMembers); // Add click listener for group name
+  elements.closeBtn.addEventListener("click", closeModal);
   window.addEventListener("click", closeDropdownMenuOnClickOutside);
 
+  elements.removeGroupBtn.addEventListener("click", () => {
+    if (!selectedGroupId) return alert("Please select a group first.");
+
+    showMembersForRemoval();
+  });
+
+  async function showMembersForRemoval() {
+    try {
+      const { data } = await axios.get(
+        `/chat/groups/${selectedGroupId}/members`,
+        { headers }
+      );
+      elements.groupMembersList.innerHTML = "";
+
+      data.members.forEach((member) => {
+        const li = document.createElement("li");
+        li.textContent = member.name;
+        li.dataset.userId = member.id;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.classList.add("remove-member-btn");
+        removeBtn.addEventListener("click", () => {
+          removeMemberFromGroup(member.id);
+        });
+
+        li.appendChild(removeBtn);
+        elements.groupMembersList.appendChild(li);
+      });
+
+      elements.groupMembersModal.style.display = "block";
+    } catch (err) {
+      console.error("Error fetching group members:", err);
+    }
+  }
+
+  async function removeMemberFromGroup(userId) {
+    if (!selectedGroupId || !userId)
+      return alert("Missing group or user information.");
+
+    try {
+      const { data } = await axios.delete(
+        `/chat/groups/${selectedGroupId}/remove-user/${userId}`,
+        { headers }
+      );
+      alert(data.message);
+      // Refresh the member list after removing
+      showMembersForRemoval();
+    } catch (err) {
+      console.error("Error removing member from group:", err);
+      alert(
+        err.response && err.response.data
+          ? err.response.data.message
+          : "Failed to remove member"
+      );
+    }
+  }
+
+  // Close modal
+  elements.closeBtn.addEventListener("click", () => {
+    elements.groupMembersModal.style.display = "none";
+  });
   async function createGroup() {
     const groupName = prompt("Enter a group name:");
     if (!groupName) return alert("Group name cannot be empty.");
@@ -149,6 +224,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function showGroupMembers() {
+    if (!selectedGroupId) return;
+
+    try {
+      const { data } = await axios.get(
+        `/chat/groups/${selectedGroupId}/members`,
+        { headers }
+      );
+      elements.groupMembersList.innerHTML = "";
+      data.members.forEach((member) => {
+        const li = document.createElement("li");
+        li.textContent = member.name;
+        elements.groupMembersList.appendChild(li);
+      });
+
+      elements.groupMembersModal.style.display = "block"; // Show the modal
+    } catch (err) {
+      console.error("Error loading group members:", err);
+    }
+  }
+
+  function closeModal() {
+    elements.groupMembersModal.style.display = "none";
+  }
+
   function toggleDropdownMenu() {
     elements.dropdownMenu.style.display =
       elements.dropdownMenu.style.display === "block" ? "none" : "block";
@@ -160,6 +260,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initial load
   loadGroups();
 });

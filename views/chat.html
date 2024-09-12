@@ -35,6 +35,9 @@
                 Create Group
               </button>
               <button class="dropdown-item add-group-btn">Add to Group</button>
+              <button class="dropdown-item remove-group-btn">
+                Remove Member
+              </button>
               <button class="dropdown-item logout-btn">Log Out</button>
             </div>
           </div>
@@ -53,6 +56,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Group Members Modal -->
+    <div id="group-members-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Group Members</h2>
+        <ul id="group-members-list">
+          <!-- Group members will be dynamically injected here -->
+        </ul>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js"></script>
     <script src="js/chat.js"></script>
   </body>

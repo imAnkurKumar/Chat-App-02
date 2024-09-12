@@ -4,7 +4,7 @@ const Message = require("../models/message");
 const User = require("../models/user");
 
 // Create a new group
-exports.createGroup = async (req, res) => {
+const createGroup = async (req, res) => {
   const { name } = req.body;
   const { id: userId, name: admin } = req.user;
 
@@ -29,7 +29,7 @@ exports.createGroup = async (req, res) => {
 };
 
 // Get all groups the user is part of
-exports.getGroups = async (req, res) => {
+const getGroups = async (req, res) => {
   const { id: userId } = req.user;
 
   try {
@@ -47,7 +47,7 @@ exports.getGroups = async (req, res) => {
 };
 
 // Add a user to a group
-exports.addUserToGroup = async (req, res) => {
+const addUserToGroup = async (req, res) => {
   const { groupId } = req.params;
   const { userEmail } = req.body;
   const { id: userId } = req.user;
@@ -87,7 +87,7 @@ exports.addUserToGroup = async (req, res) => {
 };
 
 // Send a message in a group
-exports.sendMessage = async (req, res) => {
+const sendMessage = async (req, res) => {
   const { groupId } = req.params;
   const { content } = req.body;
   const { id: userId, name } = req.user;
@@ -112,7 +112,7 @@ exports.sendMessage = async (req, res) => {
 };
 
 // Get all messages for a specific group
-exports.getGroupMessages = async (req, res) => {
+const getGroupMessages = async (req, res) => {
   const { groupId } = req.params;
   const { id: userId } = req.user;
 
@@ -131,4 +131,87 @@ exports.getGroupMessages = async (req, res) => {
     console.error("Error fetching group messages:", err);
     return res.status(500).json({ message: "Server Error" });
   }
+};
+
+// Get all members of a specific group
+const getGroupMembers = async (req, res) => {
+  const { groupId } = req.params;
+  const { id: userId } = req.user;
+
+  try {
+    // Verify the user is part of the group
+    const userGroup = await UserGroup.findOne({ where: { userId, groupId } });
+    if (!userGroup) {
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this group" });
+    }
+
+    // Fetch all users in the group
+    const members = await UserGroup.findAll({
+      where: { groupId },
+      include: {
+        model: User,
+        attributes: ["name"], // Only return the user's name for now
+      },
+    });
+
+    // Extract member names from the result
+    const groupMembers = members.map((member) => ({
+      id: member.userId,
+      name: member.user.name,
+    }));
+
+    return res.status(200).json({ members: groupMembers });
+  } catch (err) {
+    console.error("Error fetching group members:", err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const removeUserFromGroup = async (req, res) => {
+  const { groupId, userId } = req.params;
+  const { id: adminUserId } = req.user;
+
+  try {
+    // Check if the group exists
+    const group = await Group.findByPk(groupId);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Check if the requesting user is an admin
+    const adminUserGroup = await UserGroup.findOne({
+      where: { userId: adminUserId, groupId, isadmin: true },
+    });
+    if (!adminUserGroup)
+      return res
+        .status(403)
+        .json({ message: "Only admins can remove users from the group" });
+
+    // Check if the user to be removed is part of the group
+    const userGroup = await UserGroup.findOne({
+      where: { userId, groupId },
+    });
+    if (!userGroup)
+      return res
+        .status(404)
+        .json({ message: "User is not a member of this group" });
+
+    // Remove the user from the group
+    await UserGroup.destroy({ where: { userId, groupId } });
+
+    return res.status(200).json({ message: "User removed from the group" });
+  } catch (err) {
+    console.error("Error removing user from group:", err);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+module.exports = {
+  createGroup,
+  getGroupMembers,
+  getGroupMessages,
+  getGroups,
+  removeUserFromGroup,
+  addUserToGroup,
+  sendMessage,
 };

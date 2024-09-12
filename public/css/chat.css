@@ -1,4 +1,3 @@
-/* General Styles */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -13,6 +12,9 @@ body {
 .container {
   display: flex;
   height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar {
@@ -26,6 +28,7 @@ body {
 
 .sidebar-header h2 {
   margin-bottom: 20px;
+  text-align: center;
 }
 
 .group-list {
@@ -45,6 +48,7 @@ body {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  text-align: center;
 }
 
 .group-list ul li:hover {
@@ -65,14 +69,20 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 2px solid #007acc;
 }
 
 .chat-header h3 {
   margin: 0;
+  cursor: pointer;
+}
+
+.chat-header h3:hover {
+  text-decoration: underline;
 }
 
 .chat-header-actions {
-  position: relative; /* Added to position the dropdown menu */
+  position: relative;
 }
 
 .chat-header-actions .header-btn {
@@ -84,9 +94,8 @@ body {
   cursor: pointer;
 }
 
-/* Dropdown Menu */
 .dropdown-menu {
-  display: none; /* Hidden by default */
+  display: none;
   position: absolute;
   right: 0;
   top: 30px;
@@ -119,6 +128,13 @@ body {
   background-color: #f1f1f1;
 }
 
+.chat-messages .message {
+  background-color: #e2e2e2;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
 .chat-input {
   display: flex;
   padding: 15px;
@@ -146,4 +162,84 @@ body {
 
 .send-btn:hover {
   background-color: #0056b3;
+}
+
+/* Modal for Group Members */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding-top: 60px;
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#group-members-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+#group-members-list li {
+  padding: 8px;
+  margin: 5px 0;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    padding: 10px;
+  }
+
+  .chat-area {
+    width: 100%;
+    height: calc(100vh - 150px);
+  }
+
+  .chat-input {
+    padding: 10px;
+  }
+
+  .chat-input input {
+    width: 80%;
+  }
+
+  .send-btn {
+    padding: 10px 15px;
+  }
 }

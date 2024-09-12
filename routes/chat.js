@@ -22,9 +22,21 @@ router.get(
   userAuthentication,
   chatController.getGroupMessages
 );
+
 router.post(
   "/groups/:groupId/add-user",
   userAuthentication,
   chatController.addUserToGroup
+);
+
+router.get(
+  "/groups/:groupId/members",
+  userAuthentication,
+  chatController.getGroupMembers
+);
+router.delete(
+  "/groups/:groupId/remove-user/:userId",
+  userAuthentication,
+  chatController.removeUserFromGroup
 );
 module.exports = router;
