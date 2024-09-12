@@ -206,6 +206,47 @@ const removeUserFromGroup = async (req, res) => {
   }
 };
 
+const makeUserAdmin = async (req, res) => {
+  const { groupId } = req.params;
+  const { userEmail } = req.body;
+  const { id: adminUserId } = req.user;
+
+  try {
+    // Verify the group exists
+    const group = await Group.findByPk(groupId);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Check if the requesting user is an admin
+    const adminUserGroup = await UserGroup.findOne({
+      where: { userId: adminUserId, groupId, isadmin: true },
+    });
+    if (!adminUserGroup)
+      return res
+        .status(403)
+        .json({ message: "Only admins can make other members admins" });
+
+    // Find the user to be made admin and their user group
+    const user = await User.findOne({ where: { email: userEmail } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const userGroup = await UserGroup.findOne({
+      where: { userId: user.id, groupId },
+    });
+    if (!userGroup)
+      return res
+        .status(400)
+        .json({ message: "User is not a member of this group" });
+
+    // Update the user's admin status in the group
+    userGroup.isadmin = true;
+    await userGroup.save();
+
+    return res.status(200).json({ message: "User successfully made admin" });
+  } catch (err) {
+    console.error("Error making user admin:", err);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
 module.exports = {
   createGroup,
   getGroupMembers,
@@ -214,4 +255,5 @@ module.exports = {
   removeUserFromGroup,
   addUserToGroup,
   sendMessage,
+  makeUserAdmin,
 };

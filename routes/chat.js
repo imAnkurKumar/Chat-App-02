@@ -39,4 +39,10 @@ router.delete(
   userAuthentication,
   chatController.removeUserFromGroup
 );
+
+router.post(
+  "/groups/:groupId/make-admin",
+  userAuthentication,
+  chatController.makeUserAdmin
+);
 module.exports = router;

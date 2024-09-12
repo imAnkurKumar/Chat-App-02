@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     menuBtn: document.querySelector(".menu-btn"),
     dropdownMenu: document.getElementById("dropdown-menu"),
     addGroupBtn: document.querySelector(".add-group-btn"),
+    makeAdminBtn: document.querySelector(".make-admin-btn"),
     removeGroupBtn: document.querySelector(".remove-group-btn"),
     groupNameDisplay: document.getElementById("group-name"),
     groupMembersModal: document.getElementById("group-members-modal"),
@@ -151,10 +152,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Event listener for the "Make Admin" button
+  elements.makeAdminBtn.addEventListener("click", () => {
+    if (!selectedGroupId) {
+      return alert("Please select a group first.");
+    }
+
+    const userEmail = prompt(
+      "Enter the email of the user you want to make admin:"
+    );
+    if (userEmail) {
+      axios
+        .post(
+          `/chat/groups/${selectedGroupId}/make-admin`,
+          { userEmail },
+          { headers }
+        )
+        .then(({ data }) => alert(data.message))
+        .catch(handleMakeAdminError);
+    }
+  });
+
+  // Function to handle errors during the "Make Admin" request
+  function handleMakeAdminError(error) {
+    const errorMsg =
+      error.response && error.response.data
+        ? error.response.data.message
+        : "Error making user admin";
+    alert(errorMsg);
+  }
+
   // Close modal
   elements.closeBtn.addEventListener("click", () => {
     elements.groupMembersModal.style.display = "none";
   });
+
   async function createGroup() {
     const groupName = prompt("Enter a group name:");
     if (!groupName) return alert("Group name cannot be empty.");
