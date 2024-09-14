@@ -2,8 +2,8 @@ const Group = require("../models/group");
 const UserGroup = require("../models/userGroup");
 const Message = require("../models/message");
 const User = require("../models/user");
+const s3Service = require("../services/s3services");
 
-// Create a new group
 const createGroup = async (req, res) => {
   const { name } = req.body;
   const { id: userId, name: admin } = req.user;
@@ -247,6 +247,70 @@ const makeUserAdmin = async (req, res) => {
     return res.status(500).json({ message: "Server Error" });
   }
 };
+
+// const postMultimedia = async (req, res, next) => {
+//   try {
+//     console.log("I am in multimedia ");
+//     const fileUrl = await s3Service.uploadToS3(
+//       req.body.fileData.data,
+//       req.body.fileData.name
+//     );
+//     const group = await Group.findOne({
+//       where: { name: req.body.groupName },
+//     });
+
+//     await Message.create({
+//       message: fileUrl,
+//       userId: req.user.id,
+//       name: req.user.name,
+//       groupId: group.dataValues.id,
+//     });
+//     return res.status(200).json({ message: "success" });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+const postMultimedia = async (req, res, next) => {
+  try {
+    console.log("Processing multimedia upload...");
+
+    const { fileData, groupName } = req.body;
+
+    if (!fileData || !fileData.data || !fileData.name) {
+      return res.status(400).json({ message: "Invalid file data." });
+    }
+
+    // Upload file to S3
+    const fileUrl = await s3Service.uploadToS3(fileData.data, fileData.name);
+
+    // Find the group where the message is to be posted
+    const group = await Group.findOne({ where: { name: groupName } });
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    // Save message with file URL
+    await Message.create({
+      message: fileUrl, // File URL from S3
+      userId: req.user.id,
+      name: req.user.name,
+      groupId: group.dataValues.id,
+    });
+
+    // Return success message
+    return res
+      .status(200)
+      .json({ message: "Multimedia uploaded successfully!" });
+  } catch (err) {
+    console.error("Error in multimedia upload:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error while uploading multimedia." });
+  }
+};
+
 module.exports = {
   createGroup,
   getGroupMembers,
@@ -256,4 +320,5 @@ module.exports = {
   addUserToGroup,
   sendMessage,
   makeUserAdmin,
+  postMultimedia,
 };

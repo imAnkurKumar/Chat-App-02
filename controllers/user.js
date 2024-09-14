@@ -4,8 +4,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 
-function generateAccessToken(id, email) {
-  return jwt.sign({ id, email }, process.env.JWT_SECRET);
+function generateAccessToken(id, name) {
+  return jwt.sign({ id, name }, process.env.JWT_SECRET);
 }
 
 const getSignUpPage = (req, res, next) => {
@@ -57,7 +57,7 @@ const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = generateAccessToken(user.id, user.email);
+    const token = generateAccessToken(user.id, user.name);
     res.status(200).json({ message: "Login successful", token });
   } catch (err) {
     console.log(err);

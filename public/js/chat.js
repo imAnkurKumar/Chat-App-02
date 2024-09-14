@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const socket = io();
   const elements = {
     createGroupBtn: document.querySelector(".create-group-btn"),
     groupsList: document.getElementById("groups"),
@@ -10,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addGroupBtn: document.querySelector(".add-group-btn"),
     makeAdminBtn: document.querySelector(".make-admin-btn"),
     removeGroupBtn: document.querySelector(".remove-group-btn"),
+    fileInput: document.getElementById("file-input"),
     groupNameDisplay: document.getElementById("group-name"),
     groupMembersModal: document.getElementById("group-members-modal"),
     groupMembersList: document.getElementById("group-members-list"),
@@ -19,7 +21,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const token = localStorage.getItem("token");
   const headers = { Authorization: token };
   let selectedGroupId = null;
-  let messageInterval = null;
+
+  function decodeToken(token) {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  }
+
+  const decodedToken = decodeToken(token);
+  console.log(decodedToken);
+  const userId = decodedToken.id;
+  const name = decodedToken.name;
 
   // Fetch and display groups when the page loads
   async function loadGroups() {
@@ -57,12 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedGroupId = item.dataset.groupId;
     elements.groupNameDisplay.textContent = item.textContent;
 
-    // Clear the old interval and start a new one for the selected group
-    if (messageInterval) {
-      clearInterval(messageInterval);
-    }
+    joinGroup(selectedGroupId);
     loadMessages(selectedGroupId);
-    messageInterval = setInterval(() => loadMessages(selectedGroupId), 3000); // Refresh every 3 seconds
   }
 
   async function loadMessages(groupId) {
@@ -80,15 +96,77 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendMessageToChat(message) {
     const messageElem = document.createElement("div");
     messageElem.classList.add("message");
-    messageElem.textContent = `${message.name}: ${message.content}`;
+    if (message.content.includes("http")) {
+      messageElem.innerHTML = `<a href="${message.content}" target="_blank">${message.name} shared a file</a>`;
+    } else {
+      messageElem.textContent = `${message.name}: ${message.content}`;
+    }
     elements.chatMessages.appendChild(messageElem);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
   }
 
+  function joinGroup(groupId) {
+    socket.emit("joinGroup", groupId);
+  }
+
+  elements.sendBtn.addEventListener("click", () => {
+    const messageContent = elements.messageInput.value;
+    if (!messageContent || !selectedGroupId) {
+      return alert("Please select a group and enter a message.");
+    }
+
+    const messageData = {
+      groupId: selectedGroupId,
+      message: {
+        content: messageContent,
+        name: name, // Replace with actual user name
+        userId: userId,
+      },
+    };
+
+    // Emit the message via Socket.IO
+    socket.emit("sendMessage", messageData);
+    elements.messageInput.value = ""; // Clear input field
+  });
+
+  elements.fileInput.addEventListener("change", async () => {
+    const file = elements.fileInput.files[0]; // Get the first selected file
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("fileData", file);
+    formData.append("groupName", elements.groupNameDisplay.textContent); // Pass the group name to the server
+
+    try {
+      const { data } = await axios.post("/chat/upload-file", formData, {
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const fileMessageData = {
+        groupId: selectedGroupId,
+        message: {
+          content: data.fileUrl, // File URL from S3
+          name: name,
+          userId: userId,
+        },
+      };
+
+      socket.emit("sendMessage", fileMessageData); // Send file URL as a message
+    } catch (err) {
+      console.error("Error uploading file:", err);
+      alert("File upload failed. Please try again.");
+    }
+  });
+  socket.on("receiveMessage", (message) => {
+    appendMessageToChat(message); // Append the received message to the chat UI
+  });
+
   // Event Listeners
   elements.createGroupBtn.addEventListener("click", createGroup);
   elements.addGroupBtn.addEventListener("click", addUserToGroup);
-  elements.sendBtn.addEventListener("click", sendMessage);
   elements.menuBtn.addEventListener("click", toggleDropdownMenu);
   elements.groupNameDisplay.addEventListener("click", showGroupMembers); // Add click listener for group name
   elements.closeBtn.addEventListener("click", closeModal);
@@ -236,24 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ? error.response.data.message
         : "Error adding user to group";
     alert(errorMsg);
-  }
-
-  async function sendMessage() {
-    const message = elements.messageInput.value;
-    if (!message || !selectedGroupId)
-      return alert("Please select a group and enter a message.");
-
-    try {
-      const { data } = await axios.post(
-        `/chat/groups/${selectedGroupId}/messages`,
-        { content: message },
-        { headers }
-      );
-      elements.messageInput.value = "";
-      appendMessageToChat(data.message);
-    } catch (err) {
-      console.error("Error sending message:", err);
-    }
   }
 
   async function showGroupMembers() {

@@ -1,4 +1,6 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const dotenv = require("dotenv");
 dotenv.config();
 const path = require("path");
@@ -14,6 +16,8 @@ const Group = require("./models/group");
 const UserGroup = require("./models/userGroup");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(
   cors({
@@ -47,8 +51,42 @@ UserGroup.belongsTo(Group); // A UserGroup belongs to a group
 sequelize
   .sync()
   .then(() => {
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })
   .catch((err) => console.log(err));
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  socket.on("joinGroup", (groupId) => {
+    socket.join(groupId);
+    console.log(`User joined group: ${groupId}`);
+  });
+
+  socket.on("sendMessage", async (messageData) => {
+    const { groupId, message } = messageData;
+    try {
+      const newMessage = await Message.create({
+        content: message.content,
+        name: message.name,
+        groupId: groupId,
+        userId: message.userId,
+      });
+
+      io.to(groupId).emit("receiveMessage", {
+        id: newMessage.id,
+        content: newMessage.content,
+        name: newMessage.name,
+        createdAt: newMessage.createdAt,
+      });
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A userdisconnected");
+  });
+});

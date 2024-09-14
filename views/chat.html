@@ -53,6 +53,8 @@
             type="text"
             placeholder="Type your message here..."
             id="message-input" />
+          <input type="file" id="file-input" multiple />
+          <!-- File input -->
           <button class="send-btn">Send</button>
         </div>
       </div>
@@ -71,5 +73,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js"></script>
     <script src="js/chat.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
   </body>
 </html>
