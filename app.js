@@ -18,7 +18,7 @@ const UserGroup = require("./models/userGroup");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-
+app.set("io", io);
 app.use(
   cors({
     origin: "*",

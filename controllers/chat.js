@@ -2,7 +2,7 @@ const Group = require("../models/group");
 const UserGroup = require("../models/userGroup");
 const Message = require("../models/message");
 const User = require("../models/user");
-const s3Service = require("../services/s3services");
+const s3Services = require("../services/s3services");
 
 const createGroup = async (req, res) => {
   const { name } = req.body;
@@ -248,66 +248,39 @@ const makeUserAdmin = async (req, res) => {
   }
 };
 
-// const postMultimedia = async (req, res, next) => {
-//   try {
-//     console.log("I am in multimedia ");
-//     const fileUrl = await s3Service.uploadToS3(
-//       req.body.fileData.data,
-//       req.body.fileData.name
-//     );
-//     const group = await Group.findOne({
-//       where: { name: req.body.groupName },
-//     });
-
-//     await Message.create({
-//       message: fileUrl,
-//       userId: req.user.id,
-//       name: req.user.name,
-//       groupId: group.dataValues.id,
-//     });
-//     return res.status(200).json({ message: "success" });
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
-
-const postMultimedia = async (req, res, next) => {
+const uploadMltimedia = async (req, res) => {
   try {
-    console.log("Processing multimedia upload...");
+    const file = req.file;
+    const groupId = req.body.groupId;
 
-    const { fileData, groupName } = req.body;
-
-    if (!fileData || !fileData.data || !fileData.name) {
-      return res.status(400).json({ message: "Invalid file data." });
+    if (!file || !groupId) {
+      return res.status(400).json({ message: "No file or groupId provided" });
     }
 
-    // Upload file to S3
-    const fileUrl = await s3Service.uploadToS3(fileData.data, fileData.name);
+    const fileUrl = await s3Services.uploadToS3(file.buffer, file.originalname);
 
-    // Find the group where the message is to be posted
-    const group = await Group.findOne({ where: { name: groupName } });
-
+    const group = await Group.findByPk(groupId);
     if (!group) {
-      return res.status(404).json({ message: "Group not found." });
+      return res.status(404).json({ message: "Group not found" });
     }
 
-    // Save message with file URL
-    await Message.create({
-      message: fileUrl, // File URL from S3
-      userId: req.user.id,
+    const message = await Message.create({
+      content: fileUrl,
       name: req.user.name,
-      groupId: group.dataValues.id,
+      userId: req.user.id,
+      groupId: group.id,
     });
 
-    // Return success message
-    return res
-      .status(200)
-      .json({ message: "Multimedia uploaded successfully!" });
+    req.app.get("io").to(groupId).emit("receiveMessage", {
+      id: message.id,
+      content: message.content,
+      name: message.name,
+      createdAt: message.createdAt,
+    });
+    return res.status(200).json({ fileUrl });
   } catch (err) {
-    console.error("Error in multimedia upload:", err);
-    return res
-      .status(500)
-      .json({ message: "Server error while uploading multimedia." });
+    console.error("Error in file upload:", err);
+    return res.status(500).json({ message: "File upload failed" });
   }
 };
 
@@ -320,5 +293,5 @@ module.exports = {
   addUserToGroup,
   sendMessage,
   makeUserAdmin,
-  postMultimedia,
+  uploadMltimedia,
 };

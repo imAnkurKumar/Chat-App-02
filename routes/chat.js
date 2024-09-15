@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const chatController = require("../controllers/chat");
 const userAuthentication = require("../middlewares/auth");
+const upload = require("../middlewares/multer");
 
 // POST /api/groups - Create a new group
 router.post("/groups", userAuthentication, chatController.createGroup);
@@ -44,5 +45,11 @@ router.post(
   "/groups/:groupId/make-admin",
   userAuthentication,
   chatController.makeUserAdmin
+);
+router.post(
+  "/upload-file",
+  userAuthentication,
+  upload.single("fileData"),
+  chatController.uploadMltimedia
 );
 module.exports = router;
