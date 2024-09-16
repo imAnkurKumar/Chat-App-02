@@ -10,15 +10,22 @@ const PORT = process.env.PORT || 4000;
 
 const userRouter = require("./routes/user");
 const chatRouter = require("./routes/chat");
+const socketController = require("./controllers/socket");
+
 const Message = require("./models/message");
 const User = require("./models/user");
 const Group = require("./models/group");
 const UserGroup = require("./models/userGroup");
+const job = require("./jobs/cron");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+
+socketController(io);
+
 app.set("io", io);
+
 app.use(
   cors({
     origin: "*",
@@ -48,6 +55,8 @@ User.hasMany(Message); // A user can send many messages
 UserGroup.belongsTo(User); // A UserGroup belongs to a user
 UserGroup.belongsTo(Group); // A UserGroup belongs to a group
 
+job.start();
+
 sequelize
   .sync()
   .then(() => {
@@ -56,37 +65,3 @@ sequelize
     });
   })
   .catch((err) => console.log(err));
-
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  socket.on("joinGroup", (groupId) => {
-    socket.join(groupId);
-    console.log(`User joined group: ${groupId}`);
-  });
-
-  socket.on("sendMessage", async (messageData) => {
-    const { groupId, message } = messageData;
-    try {
-      const newMessage = await Message.create({
-        content: message.content,
-        name: message.name,
-        groupId: groupId,
-        userId: message.userId,
-      });
-
-      io.to(groupId).emit("receiveMessage", {
-        id: newMessage.id,
-        content: newMessage.content,
-        name: newMessage.name,
-        createdAt: newMessage.createdAt,
-      });
-    } catch (error) {
-      console.error("Error saving message:", error);
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A userdisconnected");
-  });
-});
