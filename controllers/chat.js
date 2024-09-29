@@ -160,6 +160,7 @@ const getGroupMembers = async (req, res) => {
     const groupMembers = members.map((member) => ({
       id: member.userId,
       name: member.user.name,
+      isadmin: member.isadmin,
     }));
 
     return res.status(200).json({ members: groupMembers });
@@ -198,6 +199,18 @@ const removeUserFromGroup = async (req, res) => {
 
     // Remove the user from the group
     await UserGroup.destroy({ where: { userId, groupId } });
+
+    // Check if the group has any remaining members
+    const remainingMembers = await UserGroup.findAll({ where: { groupId } });
+
+    // If no members remain, delete the group and its messages
+    if (remainingMembers.length === 0) {
+      await Message.destroy({ where: { groupId } }); // Delete all messages associated with the group
+      await Group.destroy({ where: { id: groupId } }); // Delete the group itself
+      return res.status(200).json({
+        message: "User removed and group deleted as no members remain",
+      });
+    }
 
     return res.status(200).json({ message: "User removed from the group" });
   } catch (err) {

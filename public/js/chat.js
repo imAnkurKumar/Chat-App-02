@@ -230,7 +230,10 @@ document.addEventListener("DOMContentLoaded", () => {
       elements.groupMembersList.innerHTML = "";
       data.members.forEach((member) => {
         const li = document.createElement("li");
-        li.textContent = member.name;
+        // li.textContent = member.name;
+        li.textContent = member.isadmin
+          ? `${member.name} (Admin)`
+          : member.name;
         elements.groupMembersList.appendChild(li);
       });
 

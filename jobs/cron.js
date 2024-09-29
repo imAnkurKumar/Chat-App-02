@@ -13,7 +13,11 @@ const job = new CronJob("0 0 * * *", async function () {
         },
       },
     });
-    console.log("message>>:", messages);
+
+    if (messages.length === 0) {
+      console.log("No messages to archive.");
+      return;
+    }
 
     await ArchivedChats.bulkCreate(
       messages.map((message) => ({

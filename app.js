@@ -10,12 +10,15 @@ const PORT = process.env.PORT || 4000;
 
 const userRouter = require("./routes/user");
 const chatRouter = require("./routes/chat");
+const resetPasswordRouter = require("./routes/resetPassword");
 const socketController = require("./controllers/socket");
 
 const Message = require("./models/message");
 const User = require("./models/user");
 const Group = require("./models/group");
 const UserGroup = require("./models/userGroup");
+const ResetPassword = require("./models/resetPassword");
+
 const job = require("./jobs/cron");
 
 const app = express();
@@ -41,19 +44,23 @@ app.use(express.static(path.join(__dirname, "views")));
 app.use("/", userRouter);
 app.use("/user", userRouter);
 app.use("/chat", chatRouter);
+app.use("/password", resetPasswordRouter);
 
 // Model Relationships
-Message.belongsTo(User); // A message belongs to a user
-Message.belongsTo(Group); // A message belongs to a group
+Message.belongsTo(User);
+Message.belongsTo(Group);
 
-User.belongsToMany(Group, { through: UserGroup }); // A user can belong to many groups
-Group.belongsToMany(User, { through: UserGroup }); // A group can have many users
+User.belongsToMany(Group, { through: UserGroup });
+Group.belongsToMany(User, { through: UserGroup });
 
-Group.hasMany(Message); // A group can have many messages
-User.hasMany(Message); // A user can send many messages
+Group.hasMany(Message);
+User.hasMany(Message);
 
-UserGroup.belongsTo(User); // A UserGroup belongs to a user
-UserGroup.belongsTo(Group); // A UserGroup belongs to a group
+UserGroup.belongsTo(User);
+UserGroup.belongsTo(Group);
+
+User.hasMany(ResetPassword);
+ResetPassword.belongsTo(User);
 
 job.start();
 
