@@ -6,7 +6,7 @@ dotenv.config();
 const path = require("path");
 const sequelize = require("./utils/database");
 const cors = require("cors");
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
 const userRouter = require("./routes/user");
 const chatRouter = require("./routes/chat");
