@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addGroupBtn: document.querySelector(".add-group-btn"),
     makeAdminBtn: document.querySelector(".make-admin-btn"),
     removeGroupBtn: document.querySelector(".remove-group-btn"),
+    logoutBtn: document.querySelector(".logout-btn"),
     groupNameDisplay: document.getElementById("group-name"),
     groupMembersModal: document.getElementById("group-members-modal"),
     groupMembersList: document.getElementById("group-members-list"),
@@ -330,6 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.dropdownMenu.style.display =
       elements.dropdownMenu.style.display === "block" ? "none" : "block";
   }
+
+  elements.logoutBtn.addEventListener("click", function () {
+    localStorage.removeItem("token");
+    window.location.href = "signUp.html";
+  });
 
   // Close dropdown menu if clicked outside
   window.addEventListener("click", closeDropdownMenuOnClickOutside);
